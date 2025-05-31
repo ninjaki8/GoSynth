@@ -1,10 +1,5 @@
 package main
 
-type Device struct {
-	Serial string
-	Model  string
-}
-
 // Beatmap represents a single beatmap entry in the API response
 type Beatmap struct {
 	Filename    string `json:"filename"`
