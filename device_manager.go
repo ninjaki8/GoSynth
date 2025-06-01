@@ -10,23 +10,15 @@ import (
 )
 
 // startAdbServer ensures the ADB server is running and prints its status.
-func startAdbServer() {
-	cmd := exec.Command("adb", "start-server")
-
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
+func startAdbServer(adbPath string) error {
+	cmd := exec.Command(adbPath, "start-server")
 	err := cmd.Run()
-	output := strings.TrimSpace(stderr.String())
 
-	switch {
-	case err != nil:
-		fmt.Printf("[Error] Failed to start ADB server: %v\n", err)
-	case output != "":
-		fmt.Println(output)
-	default:
-		fmt.Println("[OK] ADB server is running")
+	if err != nil {
+		return fmt.Errorf("failed to start ADB server: %v", err)
 	}
+
+	return nil
 }
 
 func getAdbVersion(adbPath string) {
@@ -40,9 +32,25 @@ func getAdbVersion(adbPath string) {
 	fmt.Printf("%s\n", string(output))
 }
 
-// getDeviceSerial scans all connected devices and returns the serial of the matching device model.
-func getDeviceSerial(device string) (string, error) {
-	cmd := exec.Command("adb", "devices", "-l")
+func IsAdbEmptyDeviceList(adbPath string) (bool, error) {
+	cmd := exec.Command(adbPath, "devices", "-l")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+
+	// Check for empty device list
+	outputStr := strings.TrimSpace(string(output))
+	if outputStr == "List of devices attached" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// getDeviceSerial scans all connected devices and extracts the serial of the matching device model.
+func getDeviceSerial(adbPath string, deviceModel string) (string, error) {
+	cmd := exec.Command(adbPath, "devices", "-l")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -64,8 +72,8 @@ func getDeviceSerial(device string) (string, error) {
 		for _, field := range fields {
 			if strings.HasPrefix(field, "model:") {
 				model := strings.TrimPrefix(field, "model:")
-				if model == device {
-					fmt.Printf("[OK] Model %s with serial %s found\n", model, serial)
+				if model == deviceModel {
+					fmt.Printf("Model %s with serial %s found\n", model, serial)
 					return serial, nil
 				}
 			}
@@ -76,12 +84,12 @@ func getDeviceSerial(device string) (string, error) {
 		return "", err
 	}
 
-	return "", fmt.Errorf("device model %s not found", device)
+	return "", fmt.Errorf("%s not found", deviceModel)
 }
 
 // adbRemoteDirExists checks whether a directory exists on the device at the given path.
-func adbRemoteDirExists(serial, remotePath string) error {
-	cmd := exec.Command("adb", "-s", serial, "shell", "ls", remotePath)
+func adbRemoteDirExists(adbPath string, serial, remotePath string) error {
+	cmd := exec.Command(adbPath, "-s", serial, "shell", "ls", remotePath)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -104,9 +112,9 @@ func adbRemoteDirExists(serial, remotePath string) error {
 }
 
 // getDeviceSynthFiles creates a map from the contents of a specified folder for the connected device.
-func getDeviceSynthFiles(folderPath string, serial string) map[string]bool {
+func getDeviceSynthFiles(adbPath string, folderPath string, serial string) map[string]bool {
 	// Get synth files
-	cmd := exec.Command("adb", "-s", serial, "shell", "ls", folderPath)
+	cmd := exec.Command(adbPath, "-s", serial, "shell", "ls", folderPath)
 
 	// Get the output of the adb command
 	output, err := cmd.Output()
@@ -130,13 +138,13 @@ func getDeviceSynthFiles(folderPath string, serial string) map[string]bool {
 	return synthFileNamesMap
 }
 
-func pushBeatmap(filePath string, deviceSerial string, remoteDir string) error {
+func pushBeatmap(adbPath string, filePath string, deviceSerial string, remoteDir string) error {
 	if deviceSerial == "" {
 		return fmt.Errorf("device serial empty")
 	}
 
 	// Push to device
-	cmd := exec.Command("adb", "-s", deviceSerial, "push", filePath, remoteDir)
+	cmd := exec.Command(adbPath, "-s", deviceSerial, "push", filePath, remoteDir)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

@@ -13,22 +13,25 @@ import (
 
 // getAdbPath returns the path to adb and sets it up if needed
 func getAdbPath() (string, error) {
-	switch runtime.GOOS {
+
+	os := getOperatingSystem()
+
+	switch os {
 	case "windows":
-		fmt.Println("INFO] Running on Windows")
-		return ensureAdbWindows()
+		return installAdbWindows()
 	case "linux":
-		fmt.Println("[INFO] Running on Linux")
-		return ensureAdbLinux()
-	case "darwin":
-		return "", fmt.Errorf("macOS is not supported in this script")
+		return installAdbLinux()
 	default:
-		return "", fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
+		return "", fmt.Errorf("unsupported operating system: %s", os)
 	}
 }
 
-// ensureAdbLinux checks if adb is installed via system package manager
-func ensureAdbLinux() (string, error) {
+func getOperatingSystem() string {
+	return runtime.GOOS
+}
+
+// installAdbLinux checks if adb is installed via system package manager
+func installAdbLinux() (string, error) {
 	path, err := exec.LookPath("adb")
 	if err != nil {
 		return "", fmt.Errorf("adb not found: please install it with `sudo pacman -S android-tools` or equivalent")
@@ -36,8 +39,8 @@ func ensureAdbLinux() (string, error) {
 	return path, nil
 }
 
-// ensureAdbWindows downloads and extracts adb if not found, and returns its path
-func ensureAdbWindows() (string, error) {
+// installAdbWindows downloads and extracts adb if not found, and returns its path
+func installAdbWindows() (string, error) {
 	adbURL := "https://dl.google.com/android/repository/platform-tools-latest-windows.zip"
 	localAppData := os.Getenv("LOCALAPPDATA")
 	destDir := filepath.Join(localAppData, "Android", "platform-tools")

@@ -12,9 +12,16 @@ func main() {
 	if err != nil {
 		fmt.Println("[ERROR]", err)
 		return
+	} else {
+		getAdbVersion(adbPath)
 	}
 
-	getAdbVersion(adbPath)
+	// Start adb server
+	startAdbServerError := startAdbServer(adbPath)
+	if startAdbServerError != nil {
+		fmt.Println("ADB:", err)
+		return
+	}
 
 	// Device model
 	deviceModel := "Quest_3"
@@ -22,25 +29,35 @@ func main() {
 	// Synthriders folder path
 	remoteDir := "/sdcard/SynthRidersUC/CustomSongs/"
 
-	// Start adb server
-	startAdbServer()
-
 	// Scan devices for Quest 3 model and return its serial number
-	serial, err := getDeviceSerial(deviceModel)
+	serial, err := getDeviceSerial(adbPath, deviceModel)
 	if err != nil {
-		fmt.Println("[Error] ", err)
+		fmt.Println("[ADB CHECK]", err)
+		return
+	}
+
+	// Case quest is connected but does not show up in list
+	isAdbEmptyDeviceList, err := IsAdbEmptyDeviceList(adbPath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Check if empty list but quest is plugged in by usb
+	if checkMissingDevice(isAdbEmptyDeviceList) {
+		fmt.Println("Quest 3 detected via USB, but not detected by ADB.\nMake sure USB debugging is enabled and accept the prompt on your headset.")
 		return
 	}
 
 	// Check if synthriders custom folder exists
-	synthFolderError := adbRemoteDirExists(serial, remoteDir)
+	synthFolderError := adbRemoteDirExists(adbPath, serial, remoteDir)
 	if synthFolderError != nil {
 		fmt.Println("[Error] ", synthFolderError)
 		return
 	}
 
 	// Get synth filenames from the device
-	deviceSynthFilesMap := getDeviceSynthFiles(remoteDir, serial)
+	deviceSynthFilesMap := getDeviceSynthFiles(adbPath, remoteDir, serial)
 	count := len(deviceSynthFilesMap)
 	fmt.Printf("[OK] Found: %d beatmaps on device\n", count)
 
@@ -67,28 +84,30 @@ func main() {
 	}
 
 	// Display new number of beatmaps to download
-	if len(newBeatmaps) > 0 {
-		fmt.Printf("[OK] Found %d beatmaps on device:\n", len(newBeatmaps))
+	newBeatmapsTotal := len(newBeatmaps)
+	if newBeatmapsTotal > 0 {
+		fmt.Printf("[OK] Found %d new beatmaps to download:\n", newBeatmapsTotal)
 	} else {
 		fmt.Println("[OK] You are up to date!")
 	}
 
 	// Download new beatmaps and upload to device
-	for _, bm := range newBeatmaps {
-		// GET beatmap url
+	for i, bm := range newBeatmaps {
+		fmt.Printf("[Uploading %d/%d] %s - ", i+1, newBeatmapsTotal, bm.Filename)
+
+		// GET beatmap URL
 		filePath, err := downloadBeatmap(bm)
 		if err != nil {
-			fmt.Printf("[Error] Failed to download beatmap %s: %v\n", bm.Filename, err)
+			fmt.Println("Failed to download beatmap", err)
 			continue
 		}
 
 		// Push file to device
-		err = pushBeatmap(filePath, serial, remoteDir)
+		err = pushBeatmap(adbPath, filePath, serial, remoteDir)
 		if err != nil {
-			fmt.Printf("[Error] Failed to upload to device %s: %v\n", bm.Filename, err)
+			fmt.Println("Failed", err)
 		} else {
-			fmt.Printf("[OK] Adb push success %s\n", bm.Filename)
+			fmt.Println("Success")
 		}
 	}
-
 }
