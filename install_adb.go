@@ -13,21 +13,14 @@ import (
 
 // getAdbPath returns the path to adb and sets it up if needed
 func getAdbPath() (string, error) {
-
-	os := getOperatingSystem()
-
-	switch os {
+	switch runtime.GOOS {
 	case "windows":
 		return installAdbWindows()
 	case "linux":
 		return installAdbLinux()
 	default:
-		return "", fmt.Errorf("unsupported operating system: %s", os)
+		return "", fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
-}
-
-func getOperatingSystem() string {
-	return runtime.GOOS
 }
 
 // installAdbLinux checks if adb is installed via system package manager

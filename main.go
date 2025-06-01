@@ -12,9 +12,10 @@ func main() {
 	if err != nil {
 		fmt.Println("[ERROR]", err)
 		return
-	} else {
-		getAdbVersion(adbPath)
 	}
+
+	// Show adb verson
+	getAdbVersion(adbPath)
 
 	// Start adb server
 	startAdbServerError := startAdbServer(adbPath)
@@ -22,6 +23,14 @@ func main() {
 		fmt.Println("ADB:", err)
 		return
 	}
+
+	// Check usb connectivity
+	if !isQuestUsbConnected() {
+		fmt.Println("[USB CHECK] Please connect your Quest 3")
+		return
+	}
+
+	fmt.Println("[USB CHECK] Quest 3 is plugged in via USB")
 
 	// Device model
 	deviceModel := "Quest_3"
@@ -36,10 +45,10 @@ func main() {
 		return
 	}
 
-	// Case quest is connected but does not show up in list
+	// Check for empty adb device list
 	isAdbEmptyDeviceList, err := IsAdbEmptyDeviceList(adbPath)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("adb command error", err)
 		return
 	}
 
