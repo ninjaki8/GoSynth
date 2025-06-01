@@ -29,6 +29,17 @@ func startAdbServer() {
 	}
 }
 
+func getAdbVersion(adbPath string) {
+	cmd := exec.Command(adbPath, "version")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("[ERROR] Failed to get adb version: %v\n", err)
+		return
+	}
+
+	fmt.Printf("%s\n", string(output))
+}
+
 // getDeviceSerial scans all connected devices and returns the serial of the matching device model.
 func getDeviceSerial(device string) (string, error) {
 	cmd := exec.Command("adb", "devices", "-l")

@@ -7,6 +7,15 @@ import (
 
 func main() {
 
+	// Ensure ADB is installed
+	adbPath, err := getAdbPath()
+	if err != nil {
+		fmt.Println("[ERROR]", err)
+		return
+	}
+
+	getAdbVersion(adbPath)
+
 	// Device model
 	deviceModel := "Quest_3"
 
