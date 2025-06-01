@@ -32,14 +32,8 @@ func main() {
 
 	fmt.Println("[USB CHECK] Quest 3 is plugged in via USB")
 
-	// Device model
-	deviceModel := "Quest_3"
-
-	// Synthriders folder path
-	remoteDir := "/sdcard/SynthRidersUC/CustomSongs/"
-
 	// Scan devices for Quest 3 model and return its serial number
-	serial, err := getDeviceSerial(adbPath, deviceModel)
+	serial, err := getDeviceSerial(adbPath, QUEST_DEVICE_MODEL)
 	if err != nil {
 		fmt.Println("[ADB CHECK]", err)
 		return
@@ -59,14 +53,14 @@ func main() {
 	}
 
 	// Check if synthriders custom folder exists
-	synthFolderError := adbRemoteDirExists(adbPath, serial, remoteDir)
+	synthFolderError := adbRemoteDirExists(adbPath, serial, SYNTHRIDERS_FOLDER)
 	if synthFolderError != nil {
 		fmt.Println("[Error] ", synthFolderError)
 		return
 	}
 
 	// Get synth filenames from the device
-	deviceSynthFilesMap := getDeviceSynthFiles(adbPath, remoteDir, serial)
+	deviceSynthFilesMap := getDeviceSynthFiles(adbPath, SYNTHRIDERS_FOLDER, serial)
 	count := len(deviceSynthFilesMap)
 	fmt.Printf("[OK] Found: %d beatmaps on device\n", count)
 
@@ -112,7 +106,7 @@ func main() {
 		}
 
 		// Push file to device
-		err = pushBeatmap(adbPath, filePath, serial, remoteDir)
+		err = pushBeatmap(adbPath, filePath, serial, SYNTHRIDERS_FOLDER)
 		if err != nil {
 			fmt.Println("Failed", err)
 		} else {

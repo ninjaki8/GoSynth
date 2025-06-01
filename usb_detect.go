@@ -15,7 +15,7 @@ func isPluggedInWindows() bool {
 		return false
 	}
 
-	return strings.Contains(string(output), "VID_2833")
+	return strings.Contains(string(output), USB_VENDOR_ID_WINDOWS)
 }
 
 func lsusbAvailable() bool {
@@ -37,7 +37,7 @@ func isPluggedInLinux() bool {
 
 	lines := strings.Split(string(out), "\n")
 	for _, line := range lines {
-		if strings.Contains(line, "2833:") {
+		if strings.Contains(line, USB_VENDOR_ID_LINUX) {
 			return true
 		}
 	}

@@ -14,8 +14,7 @@ import (
 // fetchPage performs an HTTP GET request for a specific page number and returns the decoded BeatmapPage
 func fetchPage(page int) (BeatmapPage, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
-	apiEndpoint := "https://synthriderz.com/api/beatmaps"
-	url := fmt.Sprintf("%s?page=%d", apiEndpoint, page)
+	url := fmt.Sprintf("%s?page=%d", API_ENDPOINT, page)
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -73,7 +72,7 @@ func fetchAllPagesConcurrently(totalPages int) []BeatmapPage {
 
 func downloadBeatmap(b Beatmap) (string, error) {
 	// Step 1: Download file
-	url := "https://synthriderz.com" + b.DownloadUrl
+	url := BASE_URL + b.DownloadUrl
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to download %s: %v", b.Filename, err)
