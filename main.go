@@ -25,19 +25,12 @@ func main() {
 	}
 
 	// Check usb connectivity
-	if !isQuestUsbConnected() {
+	usbConnected := isQuestUsbConnected()
+	if !usbConnected {
 		fmt.Println("[USB CHECK] Please connect your Quest 3")
 		return
 	}
-
 	fmt.Println("[USB CHECK] Quest 3 is plugged in via USB")
-
-	// Scan devices for Quest 3 model and return its serial number
-	serial, err := getDeviceSerial(adbPath, QUEST_DEVICE_MODEL)
-	if err != nil {
-		fmt.Println("[ADB CHECK]", err)
-		return
-	}
 
 	// Check for empty adb device list
 	isAdbEmptyDeviceList, err := IsAdbEmptyDeviceList(adbPath)
@@ -47,8 +40,15 @@ func main() {
 	}
 
 	// Check if empty list but quest is plugged in by usb
-	if checkMissingDevice(isAdbEmptyDeviceList) {
-		fmt.Println("Quest 3 detected via USB, but not detected by ADB.\nMake sure USB debugging is enabled and accept the prompt on your headset.")
+	if usbConnected && isAdbEmptyDeviceList {
+		fmt.Println("*NOTE* Quest 3 detected via USB, but not detected by ADB, make sure USB debugging is enabled and accept the prompt on your headset.")
+		return
+	}
+
+	// Scan devices for Quest 3 model and return its serial number
+	serial, err := getDeviceSerial(adbPath, QUEST_DEVICE_MODEL)
+	if err != nil {
+		fmt.Println("[ADB CHECK]", err)
 		return
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func isPluggedInWindows() bool {
-	cmd := exec.Command("powershell", "-Command", `Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^USB' }`)
+	cmd := exec.Command("powershell.exe", "-Command", `Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'USB\VID_*' } | Select-Object -ExpandProperty InstanceId`)
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Println("Error running PowerShell:", err)
@@ -54,22 +54,6 @@ func isQuestUsbConnected() bool {
 
 	case "linux":
 		if isPluggedInLinux() {
-			return true
-		}
-	}
-
-	return false
-}
-
-func checkMissingDevice(isAdbEmptyList bool) bool {
-	switch runtime.GOOS {
-	case "windows":
-		if isPluggedInWindows() && isAdbEmptyList {
-			return true
-		}
-
-	case "linux":
-		if isPluggedInLinux() && isAdbEmptyList {
 			return true
 		}
 	}
