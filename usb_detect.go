@@ -15,12 +15,7 @@ func isPluggedInWindows() bool {
 		return false
 	}
 
-	isFound := strings.Contains(string(output), "VID_2833")
-	if isFound {
-		return true
-	}
-
-	return false
+	return strings.Contains(string(output), "VID_2833")
 }
 
 func lsusbAvailable() bool {
