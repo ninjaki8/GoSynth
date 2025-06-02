@@ -113,4 +113,8 @@ func main() {
 			fmt.Println("Success")
 		}
 	}
+
+	// Application exit
+	fmt.Println("Press Enter to exit...")
+	fmt.Scanln() // waits for Enter
 }
