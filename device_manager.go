@@ -111,30 +111,27 @@ func adbRemoteDirExists(adbPath string, serial, remotePath string) error {
 	return fmt.Errorf("failed checking directory: %v\nstderr: %s", err, stderr.String())
 }
 
-// getDeviceSynthFiles creates a map from the contents of a specified folder for the connected device.
+// getDeviceSynthFiles creates a map of file names from the contents of a specified folder on the connected device.
 func getDeviceSynthFiles(adbPath string, folderPath string, serial string) map[string]bool {
-	// Get synth files
 	cmd := exec.Command(adbPath, "-s", serial, "shell", "ls", folderPath)
 
-	// Get the output of the adb command
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Printf("Error listing folder %s: %v\n", folderPath, err)
-		return nil
+		return map[string]bool{}
 	}
 
-	// Split the output into lines and store them in a slice
 	lines := strings.Split(string(output), "\n")
 
-	// Remove any empty lines at the end of the output
 	synthFileNamesMap := make(map[string]bool)
 	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			synthFileNamesMap[line] = true
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			synthFileNamesMap[trimmed] = true
 		}
 	}
 
-	// Return the slice of lines
+	// Return the map of file names
 	return synthFileNamesMap
 }
 
